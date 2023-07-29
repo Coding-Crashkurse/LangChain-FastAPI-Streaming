@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f2f2f2;
+        }
+
+        .chat-container {
+            border-radius: 5px;
+            background-color: white;
+            padding: 20px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #result {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        #message {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-container">
+        <h1>Chat with AI</h1>
+        <div id="result"></div>
+
+        <input type="text" id="message" placeholder="Type your message here">
+        <button onclick="sendMessage()">Send Message</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            var message = document.getElementById("message").value;
+            var response = await fetch('http://localhost:6655/stream_chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content: message })
+            });
+
+            var reader = response.body.getReader();
+            var decoder = new TextDecoder('utf-8');
+
+            reader.read().then(function processResult(result) {
+                if (result.done) return;
+                let token = decoder.decode(result.value);
+                if (token.endsWith('.') || token.endsWith('!') || token.endsWith('?')) {
+                    document.getElementById("result").innerHTML += token + "<br>";
+                } else {
+                    document.getElementById("result").innerHTML += token + ' ';
+                }
+                return reader.read().then(processResult);
+            });
+
+        }
+    </script>
+
+</body>
+
+</html>
